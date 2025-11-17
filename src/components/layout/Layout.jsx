@@ -5,18 +5,30 @@ import TestSuites from '../suites/TestSuites';
 import TestRuns from '../runs/TestRuns';
 import Analytics from '../analytics/Analytics';
 import SettingsPage from '../settings/SettingsPage';
+import SingleTestExecution from '../test/SingleTestExecution';
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const { user, logout } = useAuth();
+  
+  // FIXED #9: Strip "ROLE_" prefix for display
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN');
+  const displayRole = isAdmin ? 'ADMIN' : 'USER';
 
-  const navigation = [
-    { id: 'dashboard', name: 'Dashboard', icon: '🏠' },
-    { id: 'suites', name: 'Test Suites', icon: '📁' },
-    { id: 'runs', name: 'Test Runs', icon: '▶️' },
-    { id: 'analytics', name: 'Analytics', icon: '📊' },
-    { id: 'settings', name: 'Settings', icon: '⚙️' }
+  // FIXED #2, #10: Filter navigation based on role
+  const allNavigation = [
+    { id: 'dashboard', name: 'Dashboard', icon: '🏠', roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+    { id: 'suites', name: 'Test Suites', icon: '📁', roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+    { id: 'singleTest', name: 'Single Test', icon: '🧪', roles: ['ROLE_USER', 'ROLE_ADMIN'] }, // FIXED #7
+    { id: 'runs', name: 'Test Runs', icon: '▶️', roles: ['ROLE_ADMIN'] }, // FIXED #2: Admin only
+    { id: 'analytics', name: 'Analytics', icon: '📊', roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+    { id: 'settings', name: 'Settings', icon: '⚙️', roles: ['ROLE_USER', 'ROLE_ADMIN'] }
   ];
+
+  // FIXED #10: Filter navigation items based on user roles
+  const navigation = allNavigation.filter(item => 
+    item.roles.some(role => user?.roles?.includes(role))
+  );
 
   const renderPage = () => {
     switch (currentPage) {
@@ -24,8 +36,10 @@ const Layout = ({ children }) => {
         return <Dashboard />;
       case 'suites':
         return <TestSuites />;
+      case 'singleTest':
+        return <SingleTestExecution />; // FIXED #7: New component
       case 'runs':
-        return <TestRuns />;
+        return isAdmin ? <TestRuns /> : <Dashboard />; // FIXED #2: Protect admin route
       case 'analytics':
         return <Analytics />;
       case 'settings':
@@ -42,6 +56,12 @@ const Layout = ({ children }) => {
         <div className="p-6 border-b">
           <h1 className="text-xl font-bold text-gray-800">Test Framework</h1>
           <p className="text-sm text-gray-600 mt-1">{user?.username}</p>
+          {/* FIXED #9: Show clean role name */}
+          <span className={`inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full ${
+            isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+          }`}>
+            {displayRole}
+          </span>
         </div>
         <nav className="p-4 space-y-2">
           {navigation.map(item => (

@@ -12,15 +12,25 @@ const Analytics = () => {
   const { token } = useAuth();
 
   useEffect(() => {
+    fetchSuites();
+  }, [token]);
+
+  const fetchSuites = () => {
     fetch(`${API_BASE}/suites`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then(setSuites)
       .catch(console.error);
-  }, [token]);
+  };
 
+  // FIXED #6: Only fetch analytics when suite is selected
   const fetchAnalytics = async (suiteId) => {
+    if (!suiteId) {
+      setAnalytics(null);
+      return;
+    }
+
     try {
       const res = await fetch(
         `${API_BASE}/suites/${suiteId}/analytics?days=7`,
@@ -28,16 +38,39 @@ const Analytics = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('Analytics error:', error);
+        alert(error.message || 'Failed to fetch analytics. Suite may not have been executed yet.');
+        setAnalytics(null);
+        return;
+      }
+      
       const data = await res.json();
       setAnalytics(data);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
+      alert('Failed to fetch analytics. Please ensure the suite has been executed.');
+      setAnalytics(null);
+    }
+  };
+
+  const handleSuiteChange = (e) => {
+    const suiteId = e.target.value;
+    setSelectedSuite(suiteId);
+    if (suiteId) {
+      fetchAnalytics(suiteId);
+    } else {
+      setAnalytics(null);
     }
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Analytics</h2>
+      
+      {/* Suite Selection */}
       <div className="bg-white rounded-lg shadow p-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Select Test Suite
@@ -45,21 +78,37 @@ const Analytics = () => {
         <select
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           value={selectedSuite || ""}
-          onChange={(e) => {
-            setSelectedSuite(e.target.value);
-            fetchAnalytics(e.target.value);
-          }}
+          onChange={handleSuiteChange}
         >
-          <option value="">Select a suite...</option>
+          <option value="">Select a suite to view analytics...</option>
           {suites.map((suite) => (
             <option key={suite.id} value={suite.id}>
-              {suite.name}
+              {suite.name} ({suite.testCases?.length || 0} tests)
             </option>
           ))}
         </select>
       </div>
-      {analytics && (
+
+      {/* FIXED #6: Only show analytics when suite is selected and data is available */}
+      {!selectedSuite && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <p className="text-blue-800">
+            📊 Select a test suite above to view its analytics
+          </p>
+        </div>
+      )}
+
+      {selectedSuite && !analytics && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <p className="text-yellow-800">
+            ⏳ Loading analytics for selected suite...
+          </p>
+        </div>
+      )}
+
+      {analytics && selectedSuite && (
         <>
+          {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard
               title="Total Tests"
@@ -86,6 +135,8 @@ const Analytics = () => {
               color="bg-purple-500"
             />
           </div>
+
+          {/* Performance & Trends */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">
@@ -100,23 +151,36 @@ const Analytics = () => {
                   label="Stability"
                   value={`${analytics.summary.stability.toFixed(1)}%`}
                 />
+                <MetricRow
+                  label="Suite"
+                  value={suites.find(s => s.id === parseInt(selectedSuite))?.name || 'N/A'}
+                />
               </div>
             </div>
+
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">Trends (7 Days)</h3>
-              <div className="space-y-2">
-                {analytics.trends.data.slice(0, 5).map((trend, idx) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-gray-600">{trend.date}</span>
-                    <span className="font-semibold text-gray-800">
-                      {trend.passRate.toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {analytics.trends.data && analytics.trends.data.length > 0 ? (
+                <div className="space-y-2">
+                  {analytics.trends.data.slice(0, 5).map((trend, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-600">{trend.date}</span>
+                      <span className="font-semibold text-gray-800">
+                        {trend.passRate.toFixed(1)}% ({trend.passed}/{trend.totalTests})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  No trend data available. Execute the suite multiple times to see trends.
+                </p>
+              )}
             </div>
           </div>
-          {analytics.flakyTests.count > 0 && (
+
+          {/* Flaky Tests */}
+          {analytics.flakyTests && analytics.flakyTests.count > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <span className="w-5 h-5 text-yellow-600">⚠️</span>
@@ -133,7 +197,8 @@ const Analytics = () => {
                         {test.testName}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {test.totalRuns} runs | {test.retryCount} retries
+                        {test.totalRuns} runs | {test.retryCount} retries | 
+                        {' '}{test.passes} passed, {test.fails} failed
                       </p>
                     </div>
                     <span className="text-sm font-semibold text-yellow-700">
@@ -142,6 +207,15 @@ const Analytics = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* No Flaky Tests Message */}
+          {analytics.flakyTests && analytics.flakyTests.count === 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <p className="text-green-800">
+                ✅ No flaky tests detected! Your tests are stable.
+              </p>
             </div>
           )}
         </>
