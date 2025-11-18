@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = "http://localhost:8080";
 
 const SingleTestExecution = () => {
   const { token } = useAuth();
-  const [testType, setTestType] = useState('UI');
+  const [testType, setTestType] = useState("UI");
   const [formData, setFormData] = useState({
-    url: '',
-    elementId: '',
-    action: 'click',
-    expectedResult: '',
-    httpMethod: 'GET',
-    requestBody: ''
+    url: "",
+    elementId: "",
+    action: "click",
+    expectedResult: "",
+    httpMethod: "GET",
+    requestBody: "",
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -27,22 +27,24 @@ const SingleTestExecution = () => {
         testType,
         url: formData.url,
         expectedResult: formData.expectedResult,
-        ...(testType === 'UI' ? {
-          elementId: formData.elementId,
-          action: formData.action
-        } : {
-          httpMethod: formData.httpMethod,
-          requestBody: formData.requestBody
-        })
+        ...(testType === "UI"
+          ? {
+              elementId: formData.elementId,
+              action: formData.action,
+            }
+          : {
+              httpMethod: formData.httpMethod,
+              requestBody: formData.requestBody,
+            }),
       };
 
       const response = await fetch(`${API_BASE}/test-element`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -52,18 +54,18 @@ const SingleTestExecution = () => {
           success: true,
           message: data.message,
           testRunId: data.testRunId,
-          resultsUrl: data.resultsUrl
+          resultsUrl: data.resultsUrl,
         });
       } else {
         setResult({
           success: false,
-          message: data.error || 'Test execution failed'
+          message: data.error || "Test execution failed",
         });
       }
     } catch (error) {
       setResult({
         success: false,
-        message: `Error: ${error.message}`
+        message: `Error: ${error.message}`,
       });
     } finally {
       setLoading(false);
@@ -73,14 +75,16 @@ const SingleTestExecution = () => {
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Single Test Execution</h2>
-      
+      <h2 className="text-2xl font-bold text-gray-800">
+        Single Test Execution
+      </h2>
+
       <div className="bg-white rounded-lg shadow p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Test Type Selection */}
@@ -94,7 +98,7 @@ const SingleTestExecution = () => {
                   type="radio"
                   name="testType"
                   value="UI"
-                  checked={testType === 'UI'}
+                  checked={testType === "UI"}
                   onChange={(e) => setTestType(e.target.value)}
                   className="mr-2"
                 />
@@ -105,7 +109,7 @@ const SingleTestExecution = () => {
                   type="radio"
                   name="testType"
                   value="API"
-                  checked={testType === 'API'}
+                  checked={testType === "API"}
                   onChange={(e) => setTestType(e.target.value)}
                   className="mr-2"
                 />
@@ -117,13 +121,17 @@ const SingleTestExecution = () => {
           {/* URL (Common) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL {testType === 'API' ? 'Endpoint' : ''}
+              URL {testType === "API" ? "Endpoint" : ""}
             </label>
             <input
               type="url"
               name="url"
               required
-              placeholder={testType === 'UI' ? 'https://example.com' : 'https://api.example.com/endpoint'}
+              placeholder={
+                testType === "UI"
+                  ? "https://example.com"
+                  : "https://api.example.com/endpoint"
+              }
               value={formData.url}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -131,7 +139,7 @@ const SingleTestExecution = () => {
           </div>
 
           {/* UI-specific fields */}
-          {testType === 'UI' && (
+          {testType === "UI" && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -170,7 +178,7 @@ const SingleTestExecution = () => {
           )}
 
           {/* API-specific fields */}
-          {testType === 'API' && (
+          {testType === "API" && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -190,7 +198,7 @@ const SingleTestExecution = () => {
                 </select>
               </div>
 
-              {['POST', 'PUT', 'PATCH'].includes(formData.httpMethod) && (
+              {["POST", "PUT", "PATCH"].includes(formData.httpMethod) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Request Body (JSON)
@@ -216,7 +224,7 @@ const SingleTestExecution = () => {
             <input
               type="text"
               name="expectedResult"
-              placeholder={testType === 'UI' ? 'Success message' : '200 OK'}
+              placeholder={testType === "UI" ? "Success message" : "200 OK"}
               value={formData.expectedResult}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -245,21 +253,39 @@ const SingleTestExecution = () => {
 
         {/* Result Display */}
         {result && (
-          <div className={`mt-6 p-4 rounded-lg ${
-            result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-          }`}>
-            <h3 className={`font-semibold mb-2 ${
-              result.success ? 'text-green-800' : 'text-red-800'
-            }`}>
-              {result.success ? '✅ Test Passed' : '❌ Test Failed'}
+          <div
+            className={`mt-6 p-4 rounded-lg ${
+              result.success
+                ? "bg-green-50 border border-green-200"
+                : "bg-red-50 border border-red-200"
+            }`}
+          >
+            <h3
+              className={`font-semibold mb-2 ${
+                result.success ? "text-green-800" : "text-red-800"
+              }`}
+            >
+              {result.success ? "✅ Test Passed" : "❌ Test Failed"}
             </h3>
-            <p className={result.success ? 'text-green-700' : 'text-red-700'}>
+            <p className={result.success ? "text-green-700" : "text-red-700"}>
               {result.message}
             </p>
             {result.testRunId && (
               <div className="mt-3 pt-3 border-t border-green-200">
                 <p className="text-sm text-green-600">
-                  Test Run ID: <span className="font-mono font-semibold">{result.testRunId}</span>
+                  Test Run ID:{" "}
+                  <span className="font-mono font-semibold">
+                    {result.testRunId}
+                  </span>
+                </p>
+                <p
+                  className={
+                    result.status === "PASSED" || result.status === "COMPLETED"
+                      ? "text-green-700"
+                      : "text-red-700"
+                  }
+                >
+                  {result.status}
                 </p>
                 {/* {result.resultsUrl && (
                   <a
@@ -281,8 +307,14 @@ const SingleTestExecution = () => {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-semibold text-blue-900 mb-2">💡 Quick Guide</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li><strong>UI Tests:</strong> Test web page interactions (clicks, typing, etc.)</li>
-          <li><strong>API Tests:</strong> Test REST API endpoints (GET, POST, etc.)</li>
+          <li>
+            <strong>UI Tests:</strong> Test web page interactions (clicks,
+            typing, etc.)
+          </li>
+          <li>
+            <strong>API Tests:</strong> Test REST API endpoints (GET, POST,
+            etc.)
+          </li>
           <li>Results are saved and can be viewed in the test runs history</li>
         </ul>
       </div>
