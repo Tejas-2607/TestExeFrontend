@@ -13,6 +13,7 @@ const SingleTestExecution = () => {
     expectedResult: "",
     httpMethod: "GET",
     requestBody: "",
+    inputValue: "", // FIX #1: Added input value field
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -31,6 +32,7 @@ const SingleTestExecution = () => {
           ? {
               elementId: formData.elementId,
               action: formData.action,
+              inputValue: formData.inputValue, // FIX #1: Include input value
             }
           : {
               httpMethod: formData.httpMethod,
@@ -174,6 +176,23 @@ const SingleTestExecution = () => {
                   <option value="hover">Hover</option>
                 </select>
               </div>
+
+              {/* FIX #1: Input value field for type action */}
+              {formData.action === "type" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Input Value (Text to Type)
+                  </label>
+                  <input
+                    type="text"
+                    name="inputValue"
+                    placeholder="Enter text to type into the element"
+                    value={formData.inputValue}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </>
           )}
 
@@ -278,25 +297,6 @@ const SingleTestExecution = () => {
                     {result.testRunId}
                   </span>
                 </p>
-                <p
-                  className={
-                    result.status === "PASSED" || result.status === "COMPLETED"
-                      ? "text-green-700"
-                      : "text-red-700"
-                  }
-                >
-                  {result.status}
-                </p>
-                {/* {result.resultsUrl && (
-                  <a
-                    href={`${API_BASE}${result.resultsUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    View Detailed Results →
-                  </a>
-                )} */}
               </div>
             )}
           </div>
@@ -314,6 +314,10 @@ const SingleTestExecution = () => {
           <li>
             <strong>API Tests:</strong> Test REST API endpoints (GET, POST,
             etc.)
+          </li>
+          <li>
+            <strong>Type Action:</strong> Enter the text you want to type in the
+            "Input Value" field
           </li>
           <li>Results are saved and can be viewed in the test runs history</li>
         </ul>

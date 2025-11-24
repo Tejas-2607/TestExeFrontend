@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import StatCard from '../common/StatCard';
-import MetricRow from '../common/MetricRow';
 
 const API_BASE = 'http://localhost:8080/api';
 
@@ -98,23 +97,43 @@ const Dashboard = () => {
       </div>
       
       {isAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
-            <div className="space-y-3">
-              <MetricRow label="Avg Duration" value={`${stats.avgDurationMs.toFixed(0)}ms`} />
-              <MetricRow label="Stability (Last 10)" value={`${stats.stability.toFixed(1)}%`} />
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">Why Automated Testing Matters</h3>
+          <div className="space-y-4 text-gray-700">
+            <div>
+              <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <span className="text-blue-600">🚀</span> Faster Release Cycles
+              </h4>
+              <p className="text-sm leading-relaxed">
+                Automated testing dramatically reduces the time required for regression testing, allowing teams to deploy new features and updates more frequently. What once took days of manual testing can now be completed in minutes, enabling continuous integration and deployment practices.
+              </p>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-2">
-              <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                <span className="w-4 h-4">+</span> Create Test Suite
-              </button>
-              <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition flex items-center justify-center gap-2">
-                <span className="w-4 h-4">▶️</span> Run Tests
-              </button>
+            
+            <div>
+              <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <span className="text-green-600">💰</span> Cost Efficiency
+              </h4>
+              <p className="text-sm leading-relaxed">
+                While there's an initial investment in setting up automated tests, the long-term savings are substantial. Automated tests can run thousands of times without additional cost, catch bugs early when they're cheaper to fix, and free up QA teams to focus on exploratory testing and complex scenarios that require human insight.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <span className="text-purple-600">🎯</span> Improved Accuracy & Consistency
+              </h4>
+              <p className="text-sm leading-relaxed">
+                Human testers can make mistakes, especially when performing repetitive tasks. Automated tests execute the same steps precisely every time, eliminating human error and providing consistent, reliable results. This consistency is crucial for maintaining quality standards across multiple releases.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                <span className="text-red-600">🛡️</span> Enhanced Code Quality & Confidence
+              </h4>
+              <p className="text-sm leading-relaxed">
+                Comprehensive automated test coverage gives developers the confidence to refactor code and make improvements without fear of breaking existing functionality. This safety net encourages better code practices, reduces technical debt, and ultimately leads to more maintainable and robust applications.
+              </p>
             </div>
           </div>
         </div>
